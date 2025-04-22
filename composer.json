@@ -1,0 +1,41 @@
+{
+  "name": "ashutosh/smartmailer",
+  "description": "Smart Mailer for Laravel to handle dynamic from-address, SMTP rotation, failover, and monitoring.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.1",
+    "illuminate/support": "^9.0 || ^10.0 || ^11.0",
+    "illuminate/database": "^9.0 || ^10.0 || ^11.0",
+    "illuminate/mail": "^9.0 || ^10.0 || ^11.0",
+    "illuminate/routing": "^9.0 || ^10.0 || ^11.0",
+    "illuminate/http": "^9.0 || ^10.0 || ^11.0",
+    "illuminate/view": "^9.0 || ^10.0 || ^11.0",
+    "nesbot/carbon": "^2.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5 || ^10.0",
+    "orchestra/testbench": "^7.0 || ^8.0 || ^9.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "SmartMailer\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Ashutosh",
+      "email": "lbi.ashutosh@gmail.com"
+    }
+  ],
+  "extra": {
+    "laravel": {
+      "providers": [
+        "SmartMailer\\SmartMailerServiceProvider"
+      ],
+      "aliases": {
+        "SmartMailer": "SmartMailer\\Facades\\SmartMailer"
+      }
+    }
+  }
+}
