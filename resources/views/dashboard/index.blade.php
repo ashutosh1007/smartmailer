@@ -1,4 +1,4 @@
-@extends('vendor.smartmailer.layouts.app')
+@extends('smartmailer::layouts.app')
 
 @section('content')
 	<div class="container-fluid px-4">
