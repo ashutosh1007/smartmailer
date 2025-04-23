@@ -69,7 +69,7 @@ class MailLogController extends Controller
         $smtpServers = MailLog::distinct()->pluck('connection_name');
         $smtpStats = $this->getDetailedSmtpStats();
 
-        return view('smartmailer::dashboard', compact(
+        return view('smartmailer::dashboard.index', compact(
             'logs',
             'smtpStatus',
             'stats',
