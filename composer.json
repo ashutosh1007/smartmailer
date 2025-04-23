@@ -1,5 +1,5 @@
 {
-  "name": "ashutosh/smartmailer",
+  "name": "ashutosh1007/smartmailer",
   "description": "Smart Mailer for Laravel to handle dynamic from-address, SMTP rotation, failover, and monitoring.",
   "type": "library",
   "license": "MIT",
