@@ -65,7 +65,7 @@
 						<div class="d-flex justify-content-between align-items-center">
 							<div>
 								<h6 class="text-muted mb-2">Today's Emails</h6>
-								<h2 class="mb-0">{{ number_format($stats['sent_today']) }}</h2>
+								<h2 class="mb-0">{{ number_format($stats['today']['sent'] ?? 0) }}</h2>
 							</div>
 							<div class="stats-icon stats-success">
 								<i class="bi bi-calendar-check-fill"></i>
@@ -85,7 +85,7 @@
 						<div class="d-flex justify-content-between align-items-center">
 							<div>
 								<h6 class="text-muted mb-2">This Week</h6>
-								<h2 class="mb-0">{{ number_format($stats['sent_this_week']) }}</h2>
+								<h2 class="mb-0">{{ number_format($stats['this_week']['sent'] ?? 0) }}</h2>
 							</div>
 							<div class="stats-icon stats-info">
 								<i class="bi bi-graph-up-arrow"></i>

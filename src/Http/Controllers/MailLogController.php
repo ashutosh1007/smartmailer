@@ -218,19 +218,30 @@ class MailLogController extends Controller
         $thisWeek = now()->startOfWeek();
         $thisMonth = now()->startOfMonth();
 
+        // Calculate counts first
+        $sentToday = MailLog::whereDate('created_at', $today)->where('status', 'sent')->count();
+        $failedToday = MailLog::whereDate('created_at', $today)->where('status', 'failed')->count();
+        $sentThisWeek = MailLog::where('created_at', '>=', $thisWeek)->where('status', 'sent')->count();
+        $failedThisWeek = MailLog::where('created_at', '>=', $thisWeek)->where('status', 'failed')->count();
+        $sentThisMonth = MailLog::where('created_at', '>=', $thisMonth)->where('status', 'sent')->count();
+        $failedThisMonth = MailLog::where('created_at', '>=', $thisMonth)->where('status', 'failed')->count();
+
         return [
             'today' => [
-                'sent' => MailLog::whereDate('created_at', $today)->where('status', 'sent')->count(),
-                'failed' => MailLog::whereDate('created_at', $today)->where('status', 'failed')->count()
+                'sent' => $sentToday,
+                'failed' => $failedToday
             ],
             'this_week' => [
-                'sent' => MailLog::where('created_at', '>=', $thisWeek)->where('status', 'sent')->count(),
-                'failed' => MailLog::where('created_at', '>=', $thisWeek)->where('status', 'failed')->count()
+                'sent' => $sentThisWeek,
+                'failed' => $failedThisWeek
             ],
             'this_month' => [
-                'sent' => MailLog::where('created_at', '>=', $thisMonth)->where('status', 'sent')->count(),
-                'failed' => MailLog::where('created_at', '>=', $thisMonth)->where('status', 'failed')->count()
-            ]
+                'sent' => $sentThisMonth,
+                'failed' => $failedThisMonth
+            ],
+            // Add top-level keys for easier access in the view, using month stats as totals
+            'total_sent' => $sentThisMonth,
+            'total_failed' => $failedThisMonth,
         ];
     }
 
