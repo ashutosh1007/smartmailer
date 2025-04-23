@@ -1,1 +1,23 @@
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*~
+# Operating System Files
+.DS_Store
+Thumbs.db
+# Composer
+/vendor/
+composer.lock
+# Logs and compiled files
+*.log
+# Build artifacts
+/build/
+# PHPUnit cache
+.phpunit.result.cache
+# Environment files
+.env
+.env.*
+!.env.example
+# Project Specific
 .qodo
