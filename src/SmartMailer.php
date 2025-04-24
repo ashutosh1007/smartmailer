@@ -74,9 +74,24 @@ class SmartMailer
      */
     protected function queueMailable(SmartMailable $mailable)
     {
-        // Set the email type and recipient on the mailable
+        // Set the email type and recipient on the mailable - these might be needed by the job
         $mailable->withEmailType($this->type)
-                ->to($this->to);
+                 ->to($this->to);
+
+        // Apply queue settings from config if not already set on the mailable
+        $queueConfig = $this->config['queue']['types'][$this->type] ?? [];
+
+        if (!$mailable->connection && !empty($queueConfig['connection'])) {
+            $mailable->onConnection($queueConfig['connection']);
+        }
+        if (!$mailable->queue && !empty($queueConfig['queue'])) {
+            $mailable->onQueue($queueConfig['queue']);
+        }
+        // Note: timeout is typically set on the job, not the mailable directly.
+        // Delay can be set here if needed, but not present in config structure yet.
+        // if (empty($mailable->delay) && !empty($queueConfig['delay'])) {
+        //     $mailable->delay($queueConfig['delay']);
+        // }
 
         // Use Laravel's queue system
         return Mail::queue($mailable);
@@ -110,7 +125,7 @@ class SmartMailer
         foreach ($connections as $connection) {
             try {
                 return $this->attemptSend($mailable, $connection, $fromConfig);
-            } catch (Exception $e) {
+            } catch (\Swift_TransportException $e) { // Catch specific transport exceptions for failover
                 $lastException = $e;
                 // Log the failure for this connection
                 if ($this->currentLog) {
@@ -243,7 +258,10 @@ class SmartMailer
                 // Add any custom headers or metadata to the message
                 if (method_exists($mailable, 'getMetadata')) {
                     foreach ($mailable->getMetadata() as $key => $value) {
-                        $message->getHeaders()->addTextHeader('X-Metadata-'.$key, $value);
+                        // Ensure value is scalar before adding header
+                        if (is_scalar($value)) {
+                             $message->getHeaders()->addTextHeader('X-Metadata-'.$key, $value);
+                        }
                     }
                 }
             });

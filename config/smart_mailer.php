@@ -135,4 +135,22 @@ return [
     'database_logging' => [
         'enabled' => env('SMARTMAILER_DB_LOGGING_ENABLED', true),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure settings related to the SmartMailer dashboard.
+    |
+    */
+    'dashboard' => [
+        // The prefix for the dashboard routes.
+        'route_prefix' => env('SMARTMAILER_ROUTE_PREFIX', 'smartmailer'),
+
+        // The authorization gate to check before allowing access to the dashboard.
+        // Set to `null` to disable authorization checks.
+        // You must define this gate in your AuthServiceProvider.
+        'gate' => env('SMARTMAILER_DASHBOARD_GATE', 'viewSmartMailerDashboard'),
+    ],
 ];

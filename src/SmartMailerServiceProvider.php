@@ -5,6 +5,7 @@ namespace SmartMailer;
 use Illuminate\Support\ServiceProvider;
 use SmartMailer\Services\MailLogger;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Gate;
 use SmartMailer\Http\Middleware\HandleSmartMailerErrors;
 use SmartMailer\Http\Controllers\MailLogController;
 
@@ -33,6 +34,9 @@ class SmartMailerServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register the dashboard authorization gate
+        $this->registerDashboardGate();
+
         // Add config validation
         $this->validateConfig();
 
@@ -66,24 +70,94 @@ class SmartMailerServiceProvider extends ServiceProvider
      */
     protected function registerRoutes(): void
     {
-        Route::middleware(['web', 'auth'])
-            ->prefix(config('smart_mailer.route_prefix', 'smartmailer'))
+        $routePrefix = config('smart_mailer.dashboard.route_prefix', 'smartmailer');
+        $authMiddleware = $this->getRouteMiddleware();
+
+        Route::middleware($authMiddleware)
+            ->prefix($routePrefix)
             ->name('smartmailer.')
             ->group(function () {
                 $this->loadRoutesFrom(__DIR__.'/../routes/smartmailer.php');
             });
     }
 
+    /**
+     * Define the SmartMailer dashboard authorization gate.
+     */
+    protected function registerDashboardGate(): void
+    {
+        $gateName = config('smart_mailer.dashboard.gate');
+
+        if ($gateName) {
+             Gate::define($gateName, function ($user = null) {
+                // Basic check: ensure user is logged in.
+                // You should customize this logic in your AuthServiceProvider
+                // for more specific checks (e.g., roles, permissions).
+                return $user !== null;
+            });
+        }
+    }
+
+     /**
+     * Get the middleware group for the dashboard routes.
+     */
+    protected function getRouteMiddleware(): array
+    {
+        $middleware = ['web', 'auth']; // Default middleware
+        $gateName = config('smart_mailer.dashboard.gate');
+
+        if ($gateName) {
+            $middleware[] = 'can:'.$gateName;
+        }
+
+        return $middleware;
+    }
+
     protected function validateConfig(): void
     {
         $config = $this->app['config']->get('smart_mailer', []);
-        
-        if (empty($config['connections'])) {
-            throw new \Exception('SmartMailer: No SMTP connections configured.');
+
+        if (!isset($config['connections']) || !is_array($config['connections']) || empty($config['connections'])) {
+            throw new \InvalidArgumentException('SmartMailer: Missing or invalid `connections` array in configuration.');
         }
 
-        if (empty($config['from_addresses'])) {
-            throw new \Exception('SmartMailer: No from addresses configured.');
+        $requiredConnectionKeys = ['name', 'host', 'port', 'encryption', 'username', 'password'];
+        foreach ($config['connections'] as $index => $connection) {
+            if (!is_array($connection)) {
+                throw new \InvalidArgumentException("SmartMailer: Connection at index {$index} must be an array.");
+            }
+            foreach ($requiredConnectionKeys as $key) {
+                if (!isset($connection[$key])) {
+                    throw new \InvalidArgumentException("SmartMailer: Missing key '{$key}' in connection configuration at index {$index}.");
+                }
+            }
+        }
+
+        if (!isset($config['from_addresses']) || !is_array($config['from_addresses']) || empty($config['from_addresses'])) {
+            throw new \InvalidArgumentException('SmartMailer: Missing or invalid `from_addresses` array in configuration.');
+        }
+
+        $requiredFromKeys = ['name', 'address', 'mailer'];
+        foreach ($config['from_addresses'] as $type => $fromAddress) {
+             if (!is_array($fromAddress)) {
+                throw new \InvalidArgumentException("SmartMailer: From address configuration for type '{$type}' must be an array.");
+            }
+            foreach ($requiredFromKeys as $key) {
+                if (!isset($fromAddress[$key])) {
+                    throw new \InvalidArgumentException("SmartMailer: Missing key '{$key}' in from_address configuration for type '{$type}'.");
+                }
+            }
+            // Optional: Validate 'mailer' value against connection names or 'rotate'
+        }
+
+        // Optional: Validate strategy
+        if (isset($config['strategy']) && !in_array($config['strategy'], ['round_robin', 'random'])) {
+             throw new \InvalidArgumentException("SmartMailer: Invalid strategy '{$config['strategy']}'. Must be 'round_robin' or 'random'.");
+        }
+        
+        // Optional: Validate queue types structure if needed
+        if (isset($config['queue']['types']) && !is_array($config['queue']['types'])){
+            throw new \InvalidArgumentException('SmartMailer: `queue.types` configuration must be an array.');
         }
     }
 }

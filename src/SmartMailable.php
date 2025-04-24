@@ -71,24 +71,6 @@ abstract class SmartMailable extends Mailable implements ShouldQueue
     }
 
     /**
-     * Send the message using the given mailer.
-     *
-     * @param  \Illuminate\Contracts\Mail\Factory|\Illuminate\Contracts\Mail\Mailer  $mailer
-     * @return void
-     */
-    public function send($mailer)
-    {
-        if (!$this->emailType || !$this->recipientEmail) {
-            throw new \Exception('Email type and recipient must be set using withEmailType() and to() methods.');
-        }
-
-        app('smartmailer')
-            ->to($this->recipientEmail)
-            ->type($this->emailType)
-            ->sendMailable($this);
-    }
-
-    /**
      * Render the mailable into a view.
      *
      * @return string
