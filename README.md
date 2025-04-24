@@ -101,6 +101,32 @@ return [
     'database_logging' => [
         'enabled' => env('SMARTMAILER_DB_LOGGING_ENABLED', true),
     ],
+
+    'queue' => [
+        // Default queue connection (null means default Laravel connection)
+        'connection' => null,
+
+        // Default queue name (null means default queue)
+        'name' => null,
+
+        // Queue settings per email type
+        'types' => [
+            'marketing' => [
+                'connection' => 'redis',
+                'queue' => 'marketing-emails',
+                'timeout' => 120, // Optional job timeout
+            ],
+            'bulk' => [
+                'connection' => 'redis',
+                'queue' => 'bulk-emails',
+                'timeout' => 300,
+            ],
+            'support' => [
+                'connection' => 'sync', // Use 'sync' for immediate processing
+                'queue' => 'high',
+            ],
+        ],
+    ],
 ];
 ```
 
@@ -111,12 +137,15 @@ return [
 ```php
 use SmartMailer\Facades\SmartMailer;
 
+// This will automatically queue the WelcomeEmail if it implements ShouldQueue
 SmartMailer::to('recipient@example.com')
     ->type('marketing')
     ->send(new WelcomeEmail($user));
 ```
 
 ### Creating a Mailable
+
+By default, `SmartMailable` extends Laravel's `Mailable` and implements `Illuminate\Contracts\Queue\ShouldQueue`. This means emails created using `SmartMailable` will automatically be pushed to the queue when you call `SmartMailer::send()`. The specific queue connection and name will be determined by the `queue` configuration in `config/smart_mailer.php` based on the email `type`.
 
 ```php
 use SmartMailer\SmartMailable;
@@ -132,23 +161,29 @@ class WelcomeEmail extends SmartMailable
 
     public function build()
     {
+        // The view data and subject are defined here
         return $this->view('emails.welcome')
                    ->subject('Welcome to Our Platform!');
     }
 }
 ```
 
-### Queue Configuration
+### Overriding Queue Settings per Mailable
+
+You can override the default queue settings defined in the configuration file directly within your `SmartMailable` class:
 
 ```php
-class MarketingEmail extends SmartMailable
+class MarketingCampaignEmail extends SmartMailable
 {
     public function __construct()
     {
-        $this->useQueue('marketing-emails')
-             ->useConnection('redis')
-             ->withDelay(now()->addMinutes(5));
+        // Override default queue settings for this specific email
+        $this->onQueue('special-marketing-queue')
+             ->onConnection('sqs')
+             ->delay(now()->addMinutes(10));
     }
+
+    // ... build method ...
 }
 ```
 
